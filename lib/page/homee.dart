@@ -10,6 +10,7 @@ import 'package:hepius/page/storys.dart';
 import 'package:hepius/page/notification.dart';
 import 'package:hepius/toxicite/type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../class/cure.dart';
 import '../class/patient.dart';
 import '../class/patientapi.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +26,7 @@ class Homee extends StatefulWidget {
 class _HomeeState extends State<Homee> {
   final currentdate = DateTime.now().day;
   bool visible = false;
+  List<Cure> cure = [];
   Patient patient = const Patient(IP: '',
       nom: '',
       prenom: '',
@@ -53,12 +55,9 @@ class _HomeeState extends State<Homee> {
 
   Future init() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('patient'));
     var json = prefs.getString('patient');
     Map<String, dynamic> patientmap = jsonDecode(json!);
     setState(() => patient = Patient.fromJson(patientmap));
-    print(patient.IP);
-    print('http://192.168.43.231/hepius/${patient.picture}');
     test();
   }
 
@@ -69,12 +68,19 @@ class _HomeeState extends State<Homee> {
       String json = jsonEncode(patients[0]);
       prefs.setString('patient', json);
       final cure = await CureApi.getOneCure(patient.IP);
+      this.cure = cure;
+      print('cureeeeeeee ${this.cure[0].nextcure}');
+      if(DateTime.parse(cure[0].nextcure).day - 3 == currentdate
+          && (prefs.getInt('dayb') == null || prefs.getInt('dayb') != currentdate)){
+        prefs.setInt('dayb', currentdate);
+        insertNotif();
+      }
     });
   }
 
   Future<void> insertNotif()async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    http.post(Uri.parse("http://192.168.43.231/hepius/insertNotif.php"), body: {
+    http.post(Uri.parse("http://192.168.1.103/hepius/insertNotif.php"), body: {
       "details": 'خاصك دير التحاليل اليوم',
       "ip": prefs.getString('ip'),
     });
@@ -98,11 +104,8 @@ class _HomeeState extends State<Homee> {
     double w = MediaQuery.of(context).size.width;
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if(1==1){
-      insertNotif();
-    }
-    //if(prefs.getInt('day') == null || prefs.getInt('day') != currentdate){
-     // prefs.setInt('day', currentdate);
+    if(prefs.getInt('day') == null || prefs.getInt('day') != currentdate){
+      prefs.setInt('day', currentdate);
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -134,7 +137,7 @@ class _HomeeState extends State<Homee> {
           ),
         ),
       );
-    //}
+    }
   }
 
   @override
@@ -225,7 +228,7 @@ class _HomeeState extends State<Homee> {
                             const SizedBox(width: 16,),
                             CircleAvatar(
                                 radius: 32,
-                                backgroundImage: NetworkImage('http://192.168.43.231/hepius/${patient.picture}'),
+                                backgroundImage: NetworkImage('http://192.168.1.103/hepius/${patient.picture}'),
                             ),
                           ],
                         ),

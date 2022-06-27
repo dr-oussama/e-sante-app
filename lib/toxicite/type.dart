@@ -9,6 +9,8 @@ import 'package:hepius/toxicite/oculaire/q1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chemotherapy/q1.dart';
+import '../class/cure.dart';
+import '../class/cureApi.dart';
 import '../home.dart';
 
 
@@ -20,6 +22,8 @@ class Type extends StatefulWidget {
 }
 
 class _TypeState extends State<Type> {
+  final currentdate = DateTime.now();
+  List<Cure> cure = [];
 
   @override
   void dispose(){
@@ -39,8 +43,13 @@ class _TypeState extends State<Type> {
     double w = MediaQuery.of(context).size.width;
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    //if(prefs.getInt('day') == null || prefs.getInt('day') != currentdate){
-    // prefs.setInt('day', currentdate);
+    final cure = await CureApi.getOneCure(prefs.getString('ip'));
+    setState(() {
+      this.cure = cure;
+    });
+    print(DateTime.parse(this.cure[0].nextcure).day);
+
+    if(DateTime.parse(this.cure[0].nextcure).isBefore(currentdate)){
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -88,7 +97,7 @@ class _TypeState extends State<Type> {
         ),
       ),
     );
-    //}
+    }
   }
 
   @override

@@ -4,6 +4,8 @@ import 'package:hepius/generals/q1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chemotherapy/q1.dart';
+import '../class/cure.dart';
+import '../class/cureApi.dart';
 
 
 
@@ -15,6 +17,8 @@ class GeneralState extends StatefulWidget {
 }
 
 class _GeneralStateState extends State<GeneralState> {
+  final currentdate = DateTime.now();
+  List<Cure> cure = [];
 
   @override
   void initState() {
@@ -29,8 +33,13 @@ class _GeneralStateState extends State<GeneralState> {
     double w = MediaQuery.of(context).size.width;
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    //if(prefs.getInt('day') == null || prefs.getInt('day') != currentdate){
-    // prefs.setInt('day', currentdate);
+    final cure = await CureApi.getOneCure(prefs.getString('ip'));
+    setState(() {
+      this.cure = cure;
+    });
+    print(DateTime.parse(this.cure[0].nextcure).day);
+
+    if(DateTime.parse(this.cure[0].nextcure).isBefore(currentdate)){
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -78,7 +87,7 @@ class _GeneralStateState extends State<GeneralState> {
         ),
       ),
     );
-    //}
+    }
   }
 
   @override
